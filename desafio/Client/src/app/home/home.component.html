@@ -1,0 +1,75 @@
+  <div class="row">
+    <div class="col-lg-12">
+        <a routerLink="/users" class="btn btn-link float-right">Usuários</a>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="displayMessage">
+    <div class="col-lg-12">
+        <p class="alert alert-{{alert}}"> {{ mensagem }} </p>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <!-- Formulário de Login -->
+    <div class="col-lg-6">
+      <h6 class="text-center"> <strong> Fazer login </strong> </h6>
+      <form action="" #formLogin="ngForm" method="post" (ngSubmit)="login(formLogin)">
+          <div class="form-group">
+            <label for="email"><small>Email</small></label>
+            <input type="email" id="email" name="email"  class="form-control" 
+            [(ngModel)]="modelLogin.email" placeholder="Seu email" email required />       
+          </div>
+          <div class="form-group">
+              <label for="password"><small>Senha</small></label>
+              <input type="text" id="password" name="password"  class="form-control"
+              [(ngModel)]="modelLogin.password" placeholder="Sua senha" required />       
+          </div>
+
+          <button type="submit" [disabled]="formLogin.invalid" class="btn btn-outline-dark">Entrar</button>
+      </form>   
+    </div>
+    <!-- Fim do Formulário de Login -->
+
+    <!-- Formulário de Cadastro -->
+    <div class="col-lg-6">
+        <h6 class="text-center"> <strong> Criar conta </strong> </h6>
+        <form action="" #form="ngForm" method="post" (ngSubmit)="register(form)">
+            <div class="form-group">
+              <label for="name"><small>Nome</small></label>
+              <input type="text" id="name" name="name"  class="form-control" 
+              [(ngModel)]="modelUser.name" placeholder="Nome completo" required />       
+            </div>
+            <div class="form-group">
+              <label for="email"><small>Email</small></label>
+              <input type="email" id="email" name="email"  class="form-control" 
+              [(ngModel)]="modelUser.email" placeholder="Seu email" required />       
+            </div>
+            <div class="form-group">
+                <label for="phone"><small>Telefone/Celular</small></label>
+                <input type="text" [dropSpecialCharacters]="false" mask="(00) 00000-0000"
+                id="phone" name="phone"  class="form-control"
+                [(ngModel)]="modelUser.phone" placeholder="Sua celular" required />       
+            </div>
+
+            <div class="form-group">
+                <label for="office"><small>Cargo</small></label>
+                <select name="office" id="office" class="form-control" [(ngModel)]="modelUser.office" required>
+                  <option value="" disabled> Selecione </option>
+                  <option *ngFor="let cargo of cargos"> {{ cargo }} </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><small>Senha</small></label>
+                <input type="text" id="password" name="password"  class="form-control"
+                [(ngModel)]="modelUser.password" placeholder="Sua senha" required />       
+            </div>
+
+            <button type="submit" [disabled]="form.invalid" class="btn btn-outline-primary float-right">Cadastrar</button>
+        </form>   
+    </div>
+    <!-- Fim do Formulário de Cadastro-->
+  </div> <!-- end row-->
+

@@ -1,0 +1,26 @@
+<div class="row" *ngIf="users == null">
+  <div class="col-lg-12">
+      <p class="alert alert-danger"> Você não está autorizado a ver o conteúdo desta página! :(</p>
+  </div>
+</div>
+<div class="row" *ngIf="users">
+  <div class="col-lg-12">
+    <table class="table text-center">
+      <th>Nome</th>
+      <th>Email</th>
+      <th>Telefone</th>
+      <th>Cargo</th>
+      <th>Editar</th>
+      <th>Deletar</th>
+      <tr *ngFor="let user of users">
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.phone }}</td>
+        <td>{{ user.office }}</td>
+        <td> <span> <i class="material-icons text-info">create</i> </span> </td>
+        <td> <span> <i class="material-icons text-danger">delete_forever</i> </span> </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<hr/>
