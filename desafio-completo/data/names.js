@@ -1,0 +1,22 @@
+module.exports = [
+    "Jane",
+    "Jon",
+    "Ana",
+    "Bruce",
+    "Coringa",
+    "Arlequina",
+    "Bane",
+    "Selena",
+    "Peter",
+    "Mary",
+    "Samantha",
+    "Emma",
+    "Lauren",
+    "Valentina",
+    "Charlie",
+    "Mathew",
+    "Bob",
+    "Willian",
+    "Rachel",
+    "Miranda"
+];
