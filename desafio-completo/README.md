@@ -24,7 +24,7 @@ Instalar as dependecias:
 
     npm install
 
-É necessário ter o postgres instalado, e configurar os parametro no arquivo 'config.js'
+É necessário ter o postgres instalado, e configurar os parametros no arquivo 'config.js'
 dentro do diretório [config].
 
 Execute o arquivo 'dataload.js' para iniciar a base de dados com 20 usuários. 
@@ -48,7 +48,7 @@ Usuários:
         http://localhost:3000/users/:id
 
 
-TEMAS (no desafio é dito "interesses de um usuário", eu chamei esses interessa de Tema):
+TEMAS (no desafio é dito "interesses de um usuário", eu chamei esses interesses de Temas):
 
      [GET] e [POST]
     
@@ -80,11 +80,11 @@ GRUPOS:
 
 SOLUÇÃO DO DESAFIO.
 
-Utilizando a URL `http://localhost:3000/groups/:theme`, o usuário informa o tema de interessa dele em fazer networking.
+Utilizando a URL[POST] `http://localhost:3000/groups/:theme`, o usuário informa o tema de interesse em fazer networking.
 
 Exemplo:  `http://localhost:3000/groups/scrum`.
 
-Junto a essa URL também é enviado o id deste usuário.
+Junto a essa URL, também é enviado o "id" deste usuário que será o corpo da requisição.
 
 Exemplo:
 
@@ -98,7 +98,7 @@ ao grupo de interesse.
 
 A primeira verificação é se os parametros existem no banco de dados.
 
-A segunda verificação é se o tema ja esta no limite de 4 pessoas.
+A segunda verificação é se o tema já esta no limite de 4 pessoas.
 
 A terceira verificação é se o usuário ja não está em algum grupo ou
 se ja não existe um usuário com o mesmo cargo/ofício(office) que
