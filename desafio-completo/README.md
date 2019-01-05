@@ -20,11 +20,11 @@ repetir com quem já se reuniu
 
 Para executar a API:
 
-Instalar as dependecias:
+Instalar as dependências:
 
     npm install
 
-É necessário ter o postgres instalado, e configurar os parametros no arquivo 'config.js'
+É necessário ter o postgres instalado, e configurar os parâmetros no arquivo 'config.js'
 dentro do diretório [config].
 
 Execute o arquivo 'dataload.js' para iniciar a base de dados com 20 usuários. 
