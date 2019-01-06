@@ -1,0 +1,16 @@
+
+Nodemailer 
+
+    npm install nodemailer --save
+
+Referência:
+
+    https://www.w3schools.com/nodejs/nodejs_email.asp
+
+
+Site para receber emails:
+
+    https://mailtrap.io/
+
+
+
