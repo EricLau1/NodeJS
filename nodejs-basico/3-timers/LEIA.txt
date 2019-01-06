@@ -1,0 +1,81 @@
+Timers
+
+Função "setTimeout" executa uma função passada no primeiro parâmetro, 
+após a quantidade de milissegundos passada no segundo parâmetro.
+
+    exemplo:
+
+        // Este comando executa imediatamente
+        console.log(new Date());
+
+        // a função passada como parâmetro será executada após 3 segundos/3000 milissegundos
+        setTimeout(function () {
+            console.log(new Date());
+        }, 3000);
+
+Função "clearTimeout" cancela a execução de um "setTimeout".
+
+    Exemplo:
+
+        var imprimaData = setTimeout(function() {
+            console.log(new Date());
+        }, 3000);
+
+        clearTimeout( imprimaData );
+
+        A função "clearTimeout" irá cancelar a execução do timer "imprimaData".
+
+
+Executando funções em intervalos de tempo.
+
+    - arquivo 'interval.js':
+
+        var interval = function (callback, time) {
+
+            setTimeout(function (){
+                callback();
+                // função chamada recursivamente
+                interval(callback, time);
+            }, time);
+        };
+
+        // Esta função irá executar a cada 1 segundo ou 1000 milissegundos
+        interval(function (){
+            console.log(new Date());
+        }, 1000);
+
+
+Função "setInterval" recebe uma função no primeiro parâmetro que será executada em
+intervalos de tempo que será definido no segundo parâmetro.
+
+    exemplo:
+
+        // esta função será executada a cada 2 segundos ou 2000 milissegundos.
+        setInterval(function (){
+            console.log(new Date());
+        }, 2000);
+
+
+Função "clearInterval" recebe uma referêrencia do "setInterval" e o cancela.
+
+    exemplo:
+
+        var a = setInterval(function (){
+            console.log(new Date());
+        }, 1000);
+
+        setTimeout(function (){
+            // cancela o setInterval após 5 segundos ou 5000 milissegundos
+            clearInterval(a);
+        }, 5000);
+
+
+Função "setImmediate" deixa a execução do timer por último.
+
+    exemplo:
+
+        console.log("A " + new Date());
+        setImmediate(function () {
+            console.log("I " + new Date());
+        }, 0);
+        console.log("B " + new Date());

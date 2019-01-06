@@ -1,0 +1,402 @@
+Módulo NET.
+
+NIVEL 1.
+
+Servidor:
+
+    var net = require('net');
+
+    net.createServer(function (connection) {
+        // envia uma mensagem para os client's
+        connection.write('Olá, eu sou o servidor!');
+
+        // imprime uma mensagem vinda dos client's
+        connection.on('data', function (message) {
+            console.log(message.toString());
+        });
+
+    }).listen(3000);
+
+Cliente:
+
+    var net = require('net');
+
+    var client = net.connect({
+        host: '127.0.0.1',
+        port: 3000
+    });
+
+    client.on('connect', function () {
+        // envia uma mensagem para o servidor
+        client.write('Olá, eu sou o cliente!');
+    });
+
+    // recebe uma mensagem do servidor
+    client.on('data', function (message) {
+        console.log(message.toString());
+    });
+
+
+
+NÍVEL 2.
+
+Servidor:
+
+    var net = require('net');
+
+    var client = net.connect({
+        host: '127.0.0.1',
+        port: 3000
+    });
+
+    client.on('connect', function () {
+        // envia uma mensagem para o servidor
+        client.write('Olá, eu sou o cliente!');
+    });
+
+    // recebe uma mensagem do servidor
+    client.on('data', function (message) {
+        console.log(message.toString());
+    });
+
+    // espera uma entrada do teclado
+    process.stdin.on('readable', function () {
+
+        // pega a mensagem digitada no teclado
+        var message = process.stdin.read();
+        
+        // se não existir uma mensagem 
+        if(!message) return;
+
+        // o replace remove o \n que é colocado na mensagem quando se aperta o ENTER.
+        message = message.toString().replace(/\n/, '');
+
+        // mensagem enviada para o servidor
+        client.write(message);
+
+
+    });
+
+
+Cliente:
+
+        var net = require('net');
+
+        var client = net.connect({
+            host: '127.0.0.1',
+            port: 3000
+        });
+
+        client.on('connect', function () {
+            // envia uma mensagem para o servidor
+            client.write('Olá, eu sou o cliente!');
+        });
+
+        // recebe uma mensagem do servidor
+        client.on('data', function (message) {
+            console.log(message.toString());
+        });
+
+        // espera uma entrada do teclado
+        process.stdin.on('readable', function () {
+
+            // pega a mensagem digitada no teclado
+            var message = process.stdin.read();
+            
+            // se não existir uma mensagem 
+            if(!message) return;
+
+            // o replace remove o \n que é colocado na mensagem quando se aperta o ENTER.
+            message = message.toString().replace(/\n/, '');
+
+            // mensagem enviada para o servidor
+            client.write(message);
+
+
+        });
+
+
+NÍVEL 3.
+
+Servidor:
+
+        var net = require('net');
+
+        // array que irá guardar as conexões de todos os clientes
+        var connections = [];
+
+        var broadcast = function (message, origin) {
+
+            connections.forEach(function (connection) {
+            
+                // não envia a mensagem de volta para o mesmo cliente que a enviou
+                if(connection === origin) return;
+                
+                connection.write(message);
+
+            });
+
+
+        }
+
+        net.createServer(function (connection) {
+
+            // adiciona a conexao ao array de conexões
+            connections.push(connection);
+
+            // envia uma mensagem para os client's
+            connection.write('Olá, eu sou o servidor!');
+
+            // imprime uma mensagem vinda dos client's
+            connection.on('data', function (message) {
+                broadcast(message, connection);
+            });
+
+        }).listen(3000);
+
+
+Cliente:
+
+        var net = require('net');
+
+        var client = net.connect({
+            host: '127.0.0.1',
+            port: 3000
+        });
+
+        client.on('connect', function () {
+            // envia uma mensagem para o servidor
+            client.write('Olá, eu sou o cliente!');
+        });
+
+        // recebe uma mensagem do servidor
+        client.on('data', function (message) {
+            console.log(message.toString());
+        });
+
+        // espera uma entrada do teclado
+        process.stdin.on('readable', function () {
+
+            // pega a mensagem digitada no teclado
+            var message = process.stdin.read();
+            
+            // se não existir uma mensagem 
+            if(!message) return;
+
+            // o replace remove o \n que é colocado na mensagem quando se aperta o ENTER.
+            message = message.toString().replace(/\n/, '');
+
+            // mensagem enviada para o servidor
+            client.write(message);
+
+        });
+
+
+
+NÍVEL 4.
+
+Servidor:
+
+        var net = require('net');
+
+        // array que irá guardar as conexões de todos os clientes
+        var connections = [];
+
+        var broadcast = function (message, origin) {
+
+            connections.forEach(function (connection) {
+            
+                // não envia a mensagem de volta para o mesmo cliente que a enviou
+                if(connection === origin) return;
+                
+                connection.write(message);
+
+            });
+
+
+        }
+
+        net.createServer(function (connection) {
+
+            // adiciona a conexao ao array de conexões
+            connections.push(connection);
+
+            // envia uma mensagem para os client's
+            connection.write('Olá, eu sou o servidor!');
+
+
+            // imprime uma mensagem vinda dos client's
+            connection.on('data', function (message) {
+
+                var command = message.toString();
+
+                if (command.indexOf('/nickname') === 0) {
+
+                    // indexOf retorna a posição do primeiro elemento 
+                    // da substring encontrada na string,
+                    // ou seja a primeira palavra do da string
+                    // deve começar com /nickname, para que ela retorne a posição 0
+
+                    nickname = command.replace('/nickname ', '');
+
+                    broadcast(`${connection.nickname || 'anônimo'} agora é ${nickname}`);
+
+                    connection.nickname = nickname;   
+                
+                    return;
+
+                } 
+                
+                broadcast(`${connection.nickname || 'anônimo'} > ${message}`, connection);
+            });
+
+        }).listen(3000);
+
+
+Cliente:
+
+        var net = require('net');
+
+        var client = net.connect({
+            host: '127.0.0.1',
+            port: 3000
+        });
+
+        client.on('connect', function () {
+            // envia uma mensagem para o servidor
+            client.write('Olá, eu sou o cliente!');
+        });
+
+        // recebe uma mensagem do servidor
+        client.on('data', function (message) {
+            console.log(message.toString());
+        });
+
+        // espera uma entrada do teclado
+        process.stdin.on('readable', function () {
+
+            // pega a mensagem digitada no teclado
+            var message = process.stdin.read();
+            
+            // se não existir uma mensagem 
+            if(!message) return;
+
+            // o replace remove o \n que é colocado na mensagem quando se aperta o ENTER.
+            message = message.toString().replace(/\n/, '');
+
+            // mensagem enviada para o servidor
+            client.write(message);
+
+        });
+
+NÍVEL 5.
+
+Servidor:
+
+        var net = require('net');
+
+        // array que irá guardar as conexões de todos os clientes
+        var connections = [];
+
+        var broadcast = function (message, origin) {
+
+            connections.forEach(function (connection) {
+            
+                // não envia a mensagem de volta para o mesmo cliente que a enviou
+                if(connection === origin) return;
+                
+                connection.write(message);
+
+            });
+
+
+        }
+
+        net.createServer(function (connection) {
+
+            // adiciona a conexao ao array de conexões
+            connections.push(connection);
+
+            // envia uma mensagem para os client's
+            connection.write('Server online!');
+
+
+            // imprime uma mensagem vinda dos client's
+            connection.on('data', function (message) {
+
+                var command = message.toString();
+
+                if (command.indexOf('/nickname') === 0) {
+
+                    // indexOf retorna a posição do primeiro elemento 
+                    // da substring encontrada na string,
+                    // ou seja a primeira palavra do da string
+                    // deve começar com /nickname, para que ela retorne a posição 0
+
+                    nickname = command.replace('/nickname ', '');
+
+                    broadcast(`${connection.nickname || 'anônimo'} agora é ${nickname}`);
+
+                    connection.nickname = nickname;   
+                
+                    return;
+
+                } 
+                
+                broadcast(`${connection.nickname || 'anônimo'} > ${message}`, connection);
+            });
+
+            // detecta quando um cliente é encerrado
+            connection.on('end', function () {
+                
+                broadcast(`${connection.nickname || 'anônimo'} saiu.`, connection);
+
+                // remove a conexão do array de conexões
+                connections.splice(connections.indexOf(connection), 1);
+
+            });
+
+        }).listen(3000);
+
+Cliente:
+
+var net = require('net');
+
+var client = net.connect({
+    host: '127.0.0.1',
+    port: 3000
+});
+
+client.on('connect', function () {
+    // envia uma mensagem para o servidor
+    client.write('entrou.');
+});
+
+// recebe uma mensagem do servidor
+client.on('data', function (message) {
+    console.log(message.toString());
+});
+
+// dectecta quando o servidor é encerrado
+client.on('end', function () {
+    // encerra a conexão do cliente
+    console.log("server is down...");
+    process.exit(0);
+});
+
+// espera uma entrada do teclado
+process.stdin.on('readable', function () {
+
+    // pega a mensagem digitada no teclado
+    var message = process.stdin.read();
+    
+    // se não existir uma mensagem 
+    if(!message) return;
+
+    // o replace remove o \n que é colocado na mensagem quando se aperta o ENTER.
+    message = message.toString().replace(/\n/, '');
+
+    // mensagem enviada para o servidor
+    client.write(message);
+
+});

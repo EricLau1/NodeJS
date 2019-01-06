@@ -1,0 +1,38 @@
+Objetos Globais
+
+Possibilidades de declarar variáveis globais.
+
+    global.max = 10000
+    GLOBAL.max = 10000
+    root.max   = 10000
+
+Também é possível declarar uma variável global declarando-a sem o comando "var"
+
+    max = 10000
+
+- É possivel visualizar todos os parametros globais no objeto "global"  
+
+    console.log(global);
+
+- Uma boa prática de programação é criar um módulo com variáveis globais no arquivo "config.js"
+
+    - arquivo 'config.js':
+
+        module.exports.max = 10000;
+
+    - arquivo 'serialGenerator.js':
+
+        var config = require('./config');
+
+        module.exports.generate = function() {
+
+            return Math.floor(Math.random() * config.max);
+
+        }
+
+    - arquivo 'index.js':
+
+        global.max = 10000
+
+        var serialGenerator = require('./serialGenerator');
+        console.log( serialGenerator.generate() )

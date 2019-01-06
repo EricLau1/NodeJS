@@ -1,0 +1,75 @@
+Módulos
+
+A função "require" retorna o que o módulo está exportando.
+
+Tudo que estiver dentro de um módulo, está privado por padrão.
+
+As propriedades e funções de um módulo precisam ser exportadas.
+
+- Arquivo 'serialGenerator.js':
+
+    module.exports.generate = function() {
+        return Math.floor(Math.random() * 1000);
+    }
+
+A propriedade generate está sendo criada e será exportada.
+
+Apenas propriedades e funções do "module.exports" são retornados da função "require".
+
+- Acessando a função generate em outro arquivo.
+
+    - Arquivo 'index.js':
+
+    var serialGenerator = require('./serialGenerator.js'); 
+
+    console.log( serialGenerator.generate() );
+
+
+***Exportando o módulo como um Objeto***
+
+- Arquivo 'serialGenerator.js':
+
+        var max = 10000;
+
+        var generate = function () {
+            return Math.floor(Math.random() * max);
+        }
+
+        module.exports.serialGenerator = {
+            generate : generate
+        };
+
+
+- Arquivo 'index.js':
+
+    var serial = require('./serialGenerator.js'); 
+
+    console.log(serial.serialGenerator.generate());
+
+    **Outro método**
+
+        var serial = require('./serialGenerator.js').serialGenerator; 
+
+        console.log( serial.generate() );
+
+
+***Retornando a Instância de um Objeto (Função Construtora)***
+
+- Arquivo 'serialGenerator.js':
+
+    var SerialGenerator = function() {
+
+        var max = 10000;
+
+        this.generate = function () {
+            return Math.floor(Math.random() * max);
+        }
+    }
+
+    module.exports = new SerialGenerator();
+
+-Arquivo 'index.js':
+
+    var serial = require('./serialGenerator.js'); 
+
+    console.log( serial.generate() );

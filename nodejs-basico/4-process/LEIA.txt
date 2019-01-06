@@ -1,0 +1,120 @@
+# PROCESS
+
+A propriedade "process" está na variável global.
+
+    console.log(global.process);
+
+Retornando um array das propriedades do objeto "process":
+
+    Object.keys(global.process).forEach((value) => console.log(value));
+
+
+Passando valores pela linha de comando:
+
+    node arquivo.js arg1 arg2 arg3 ...argN
+
+    Conteúdo do arquivo:
+
+        process.argv.forEach((value) => console.log(value));
+
+        Retorna um Array com todos o argumentos passados pelo terminal.
+
+        Os dois primeiros valores serão o caminho de onde se encontra cada comando.
+
+
+Como ignorar os dois primeiros parâmetros.
+
+    var options = process.argv.slice(2);
+    console.log(options);
+
+    O Slice retorna um Array a partir da posição indicada no parâmetro.
+
+
+Utilizando "process" para imprimir (STDOUT) mensagens:
+
+    process.stdout.write(text + '\n');
+
+    Comando de teste:
+
+        node console.js 1> out.log
+
+        Neste comando apenas as mensagens do "stdout" serão escritos no arquivo 'out.log'.
+
+
+Utilizando "process" para imprimir mensagens de erro:
+
+    process.stderr.write(e + '\n');
+
+    Comando de teste:
+
+        node console.js 2> out.log
+
+        Neste comando apenas as mensagens do "stderr" serão escritos no arquivo 'out.log'.
+
+Combinando os dois comandos:
+
+    node console.js 1> out.log 2> error.log
+
+
+Utilizando "process" para ler (STDIN) mensagens do teclado:
+
+        process.stdin.on('readable', function () {
+
+            var conteudo = process.stdin.read();
+
+            if (conteudo) {
+               
+                console.log(conteudo);
+                
+                A linha acima retorna o conteudo digitado em bytes.
+
+                console.log(conteudo.toString());
+
+                A linha acima retorna o conteudo digitado em String
+
+            }
+
+        });
+
+
+Utilizando "process" para encerrar o programa.
+
+    process.exit(0);
+
+Referência:
+
+    https://nodejs.org/api/process.html#process_process_stdin
+
+Informações do Processo:
+
+PID do processo:
+
+    process.pid
+
+Título do processo:
+
+    process.title
+
+Arquitetura da máquina:
+
+    process.arch
+
+Plataforma:
+
+    process.Platform
+
+Variáveis de ambiente:
+
+    process.env
+
+Ocupação da memória:
+
+    process.memoryUsage();
+
+Uptime:
+
+    process.uptime();
+
+Versões:
+
+    process.versions
