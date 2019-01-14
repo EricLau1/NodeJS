@@ -1,0 +1,45 @@
+<div class="container">
+	<div class="jumbotron bg-white">
+			<h1 class="text-center">Consumindo Api NodeJs</h1>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col-md-6">
+			<form method="POST" #form="ngForm" (ngSubmit)="onSubmit(form)">
+
+				<div class="form-group">
+					<input type="number" class="form-control"  min="1" max="9" [(ngModel)]="data" name="data"  placeholder="Envie de 0 a 10 megabytes"/>
+				</div>
+				<button class="btn btn-sm btn-primary" type="submit" style="margin-bottom: 10px;" 
+				[disabled]="!form.valid">Enviar</button>								
+			</form>
+		</div>
+		<br>
+
+		<div class="col-md-6">
+			<div *ngIf="!message==''"> 
+				<p class="alert alert-info"> {{ message }} </p>
+			</div>
+			<div *ngIf="!errorMessage==''"> 
+				<p class="alert alert-danger"> {{ errorMessage }} </p>
+			</div>
+			<div *ngIf='response'>
+				<h5> Bytes enviados! </h5>
+				<table class='table'>
+					<tr>
+						<td>Bytes</td>
+						<td> {{ response.bytes }} </td>
+					</tr>
+					<tr>
+						<td>KBytes</td>
+						<td>{{ response.kbytes }} </td>
+					</tr>
+					<tr>
+						<td>MBytes</td>
+						<td> {{ response.mbytes }}</td>
+					</tr>		
+				</table>
+			<div>
+		</div>
+	</div>
+</div>

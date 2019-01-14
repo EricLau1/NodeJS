@@ -1,0 +1,54 @@
+Comandos
+
+$ npm install express sequelize pg pg-hstore --save
+
+$ npm install bcrypt --save
+
+$ npm install body-parser --save
+
+$ npm install --save http-status
+
+$ npm install --save jwt-simple passport passport-jwt
+
+Módulos.
+
+    ROTAS.
+        
+        - Express
+
+            https://expressjs.com/pt-br/4x/api.html#app
+
+    JSON.
+
+        Body parser
+
+            https://www.npmjs.com/package/body-parser
+
+
+    BANCO DE DADOS.
+        
+        - Sequelize Postgresql
+
+            http://docs.sequelizejs.com/manual/installation/getting-started.html
+
+    CRIPTOGRAFIA.
+
+        - Bcrypt
+
+            https://www.npmjs.com/package/bcrypt-nodejs
+
+
+    HTTP.
+        - Status code
+       
+            https://www.npmjs.com/package/http-status
+
+    AUTENTICAÇÃO.
+
+        - JWT
+        
+            https://jwt.io/
+
+        - passport
+        
+            http://www.passportjs.org/

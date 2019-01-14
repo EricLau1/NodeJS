@@ -1,0 +1,36 @@
+Inicio
+
+$ npm init -y
+
+Instalação.
+
+    Módulos:
+
+        - Rotas
+                'express'
+        
+        - ORM
+                'sequelize'
+
+        - Postgres
+                'pg' 
+                'pg-hstore'
+        
+comando:
+
+$ npm install express sequelize pg pg-hstore --save
+
+Recebe corpo de requisições em json
+
+$ npm install body-parser --save
+
+Referencias:
+
+express: https://expressjs.com/pt-br/4x/api.html
+
+sequelize: http://docs.sequelizejs.com/manual/installation/getting-started
+
+
+No diretório raiz.
+
+    Crie um arquivo 'app.js'.

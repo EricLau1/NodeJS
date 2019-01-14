@@ -1,0 +1,23 @@
+Instalação.
+
+npm i express
+
+npm i body-parser
+
+npm i cors
+
+npm i bcrypt
+
+Referências.
+
+EXPRESS
+https://expressjs.com/pt-br/starter/hello-world.html
+
+CORS
+https://github.com/expressjs/cors
+
+BODY-PARSER
+https://www.npmjs.com/package/body-parser
+
+BCRYPT
+https://www.npmjs.com/package/bcrypt

@@ -1,0 +1,10 @@
+PostgreSQL Windows
+
+Logar via terminal:
+
+\> psql -U [nome-do-usuario]
+
+	Exemplo:
+
+		psql -U postgres
+

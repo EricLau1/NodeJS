@@ -1,0 +1,167 @@
+Controllers.
+
+$ npm install --save-dev testdouble
+
+No diretório [test].
+
+    Crie um diretório [unit].
+
+No diretório [test/unit/].
+
+    Crie um arquivo 'mocha.opts'.
+
+        Escreva o código:
+
+            --require test/unit/helpers.js
+            --reporter spec
+            --compilers js:babel-core/register
+            --slow 5000
+
+
+    Crie um arquivo 'helpers.js'.
+
+        Escreva o código:
+
+            import chai from 'chai';
+            import td from 'testdouble';
+
+            global.expect = chai.expect;
+            global.td = td;
+
+    Crie um diretório [controllers].
+
+No diretório [unit/controllers/].
+
+    Crie um arquivo 'Book.js'.
+
+        Escreva o código:
+
+            describe("Controllers: Book", () => {
+
+                describe("Me dê todos os livros: getAll()", () => {
+                    it("retorna uma lista de livros", () => {
+
+                    });
+                });
+
+            });
+
+No 'package.js'.
+
+    Crie um novo "script" para teste unitários:
+
+          "scripts": {
+            "start": "babel-node index.js",
+            "test": "echo \"Error: no test specified\" && exit 1",
+            "test-integration": "mocha --opts test/integration/mocha.opts test/integration/*.js",
+            "test-unit": "mocha --opts test/unit/mocha.opts test/unit/**/*.js",
+            "lint": "eslint '**/*.js'",
+            "lint:fix": "eslint '**/*.js' --fix"
+        }
+
+Rode o teste:
+
+$ npm run test-unit
+
+No diretório raiz.
+
+    Crie um diretório [controllers].
+
+        Crie um arquivo 'book.js'.
+
+            Escreva o código:
+
+                class BookController {
+
+                    constructor(Book) {
+                        this.book = book;
+                    }
+
+                    getAll() {
+                        
+                    }
+
+                }
+
+No diretório raiz.
+
+    Crie um diretório [routes].
+
+No diretório [routes].
+
+    Crie arquivo 'book.js'.
+
+Recorte o bloco de rotas do arquivo 'app.js'.
+
+    Cole no arquivo [routes/book.js].
+
+        O código irá ficar assim:
+
+            import BookController from '../controllers/book';
+
+            export default (app, Book) => {
+
+                app.route('/books')
+                    .get((req, res) => {
+                        Book.findAll({})
+                        .then(result => res.json(result))
+                        .catch(() => res.status(412));
+                    }) // aproveitando a mesma rota para enviar POST
+                    .post((req, res) => {
+                        Book.create(req.body)
+                        .then(result => res.json(result))
+                        .catch(() => res.status(412));
+                    });
+
+
+                app.route('/books/:id')
+                    .get((req, res) => {
+                        Book.findOne({ where: req.params })
+                        .then(result => res.json(result))
+                        .catch(() => res.status(412));
+                    })
+                    .put((req, res) => {
+                        Book.update(req.body, { where: req.params })
+                        .then(result => res.json(result))
+                        .catch(() => res.status(412));
+                    })
+                    .delete((req, res) => {
+                        Book.destroy({ where: req.params })
+                        .then(() => res.sendStatus(204))
+                        .catch(() => res.status(412));
+                    });
+
+            }
+
+No 'app.js'.
+
+    Atualize o código:
+
+        import express from 'express';
+        import bodyParser from 'body-parser';
+        import config from './config/config';
+        import datasource from './config/datasource';
+        import booksRouter from './routes/book';
+
+        const app = express();
+        app.config = config;
+        app.datasource = datasource(app);
+        app.set('port', 7000);
+        app.use(bodyParser.json());
+        const Book = app.datasource.models.Books;
+        booksRouter(app, Book);
+
+        export default app;
+
+Rode um teste de integração:
+
+$ npm run test-integration
+
+Rodando os dois testes:
+
+$ npm run test-unit && npm run test-integration
+
+
+
+
+

@@ -1,0 +1,746 @@
+Node Api Restful
+
+Iniciando projeto.
+
+$ npm init -y
+
+No arquivo 'package.json'.
+
+	Configure um "script" para o npm start:
+
+	  	"scripts": {
+			"start": "node app.js"
+		}
+
+No diretório raiz.
+
+	Crie um arquivo 'app.js'.
+
+		Código de inicialização da Api:
+
+*/
+		var express = require("express");
+
+		const app = express();
+
+		app.set('port', 3000);
+
+		app.get('/', (req, res) => {
+			res.send("My Api");
+		});
+
+		app.listen( app.get('port'), () => {
+			console.log(`Api listening on port ${ app.get('port') }`);
+		});
+
+*\
+
+
+No diretório raiz.
+
+	Crie o diretório [config].
+		
+		Crie o arquivo 'config.js'.
+
+			Exporte as configurações:
+
+*/
+
+				module.exports = {
+					database: 'dbtest',
+					username: 'postgres',
+					password: '@root',
+					host: '127.0.0.1',
+					params: {
+						dialect: 'postgres'
+					}
+				}
+
+*\
+		Crie o arquivo 'datasource.js'.
+
+			Escreva o código para mapear os models com o sequelize:
+
+*/
+
+				var Sequelize = require('sequelize');
+				var fs = require('fs');
+				var path = require('path');
+
+				var database = null;
+
+				const loadModels = function (sequelize) {
+
+					const dir = path.join(__dirname, '../models');
+
+					const models = [];
+
+					fs.readdirSync(dir).forEach((file) => {
+
+						const modelDir = path.join(dir, file);
+
+						const model = sequelize.import(modelDir);
+
+						console.log(model);
+
+						models[model.name] = model;
+
+					});
+
+					return models;
+
+				}
+
+				module.exports = (app) => {
+
+					if(!database) {
+
+						const config = app.config;
+
+						const sequelize = new Sequelize(
+							config.database,
+							config.username,
+							config.password,
+							config.params
+						);
+
+						database = {
+							sequelize: sequelize,
+							Sequelize: Sequelize,
+							models: {}
+						};
+
+						database.models = loadModels(sequelize);
+
+						sequelize.sync().done(() => database );
+
+					}
+
+					return database;
+
+				};
+				
+*\
+
+No diretório raiz.
+
+	Crie um diretório [models].
+
+		Crie o model 'User.js'.
+
+*/
+
+			module.exports = (sequelize, DataType) => {
+
+				const User = sequelize.define('users', {
+					id: {
+						type: DataType.INTEGER,
+						primaryKey: true,
+						autoIncrement: true
+					},
+					name: {
+						type: DataType.STRING,
+						allowNull: false,
+						validate: {
+							notEmpty: true
+						}
+					},
+					email: {
+						type: DataType.STRING,
+						allowNull: false,
+						validate: {
+							notEmpty: true,
+							isEmail: true
+						}
+					},
+					password: {
+						type: DataType.STRING,
+						allowNull: false,
+						validate: {
+							notEmpty: true
+						}
+					}
+				});
+
+				return User;
+
+			};
+
+*\
+
+No diretório raiz.
+
+	No arquivo 'app.js'.
+
+		Adicione o arquivo de configuração ao {app}:
+
+*/
+
+			var express = require('express');
+			var config = require('./config/config');
+			var datasource = require('./config/datasource');
+
+			const app = express();
+			app.config = config;
+			app.datasource = datasource(app);
+
+			app.set('port', 3000);
+
+
+			app.get('/', (req, res) => {
+				const Users = app.datasource.models.users;
+				Users
+					.create({
+						name: "Jane Doe",
+						email: "janedoe@email.com",
+						password: "1234567890"
+					})
+					.then(result => {
+						res.send("My Api");
+						console.log(result);
+					});
+			});
+
+			app.listen( app.get('port'), () => {
+				console.log(`Api listening on port ${ app.get('port') }`);
+			});
+
+*\
+
+		Teste a Api.
+
+Observações.
+
+	Ter o postgres instalado e configurado.
+	Criar um banco de dados com o mesmo nome do arquivo de configuração.
+	Instalar os módulos do sequelize e postgres.
+
+Agora será configurado para que quando um usuário for criado a senha seja criptografada.
+
+Exclua o banco, e crie novamente com o mesmo nome.
+
+	Modifique o model 'User.js':
+
+*/
+		const bcrypt =  require('bcrypt');
+		module.exports = (sequelize, DataType) => {
+
+			const User = sequelize.define('users', {
+				id: {
+					type: DataType.INTEGER,
+					primaryKey: true,
+					autoIncrement: true
+				},
+				name: {
+					type: DataType.STRING,
+					allowNull: false,
+					validate: {
+						notEmpty: true
+					}
+				},
+				email: {
+					type: DataType.STRING,
+					allowNull: false,
+					validate: {
+						notEmpty: true,
+						isEmail: true
+					}
+				},
+				password: {
+					type: DataType.STRING,
+					allowNull: false,
+					validate: {
+						notEmpty: true
+					}
+				}
+			},
+			{
+				hooks: {
+					// Ante de criar um novo usuário a senha será criptografada.
+					beforeCreate(user) {
+						const salt = bcrypt.genSaltSync();
+						user.set('password', bcrypt.hashSync(user.password, salt));
+					},
+				},
+			});
+
+			User.verifyPassword = (hash, password) => {
+				bcrypt.compareSync(password, hash);
+			};
+			return User;
+		};
+
+*\
+
+		Teste a Api.
+
+No diretório raiz.
+
+	Crie o diretório [controllers].
+
+		Crie um controller 'users.js'.
+
+			Escreva o código:
+
+*/
+
+				const HttpStatus = require('http-status');
+
+				// retornando um objeto de resposta padrão
+				const defaultResponse = (data, statusCode = HttpStatus.OK) => ({
+					data,  // assume o valor passado como parâmetro.
+					statusCode, // caso nenhum valor seja passado como parametro recebe o status OK por default.
+				});
+
+				// retornando um objeto de resposta de erro padrão
+				const errorResponse = (message, statusCode = HttpStatus.BAD_REQUEST) => ({
+					message,
+					statusCode
+				});
+
+				class UsersController {
+					
+					constructor(users) {
+
+						this.Users = users;
+
+					}
+
+					getAll() {
+						return this.Users
+							.findAll({})
+							.then(result => defaultResponse(result))
+							.catch(error => errorResponse(error.message));
+					}
+
+					getById(params) {
+						return this.Users
+							.findOne({where: params})
+							.then(result => defaultResponse(result))
+							.catch(erro => errorResponse(error.message));
+					}
+
+					create(data) {
+						return this.Users
+							.create(data)
+							.then(result => defaultResponse(result, HttpStatus.CREATED))
+							.catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+					}
+
+					update(data, params) {
+						return this.Users
+							.update(data, { where: params })
+							.then(result => defaultResponse(result))
+							.catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+					}
+
+					delete(params) {
+						return this.Users
+							.destroy({where: params})
+							.then(result => defaultResponse(result, HttpStatus.NO_CONTENT))
+							.catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+					}
+
+				}
+
+				// recebe como parámetro um model do sequelize
+				module.exports = UsersController;
+
+
+*\
+
+Testando controller no 'app.js':
+
+*/
+
+				var express = require('express');
+				var config = require('./config/config');
+				var datasource = require('./config/datasource');
+				var UsersController = require('./controllers/users');
+
+				const app = express();
+				app.config = config;
+				app.datasource = datasource(app);
+
+				const Users = new UsersController(app.datasource.models.users);
+
+				app.set('port', 3000);
+
+				app.get('/', (req, res) => {
+					Users
+						.getAll()
+						.then(results => res.json(results))
+						.catch(() => res.status(400));
+				});
+
+				app.listen( app.get('port'), () => {
+					console.log(`Api listening on port ${ app.get('port') }`);
+				});
+
+*\
+
+Crie um diretório [routes].
+
+	Crie um arquivo 'users.js'.
+
+		Escreva as rotas:
+
+*/
+
+			var UsersController = require('../controllers/users');
+
+			module.exports = (app) => {
+
+				const usersController = new UsersController(app.datasource.models.users);
+
+				app.route('/users')
+					.get((req, res) => {
+
+						usersController
+							.getAll()
+							.then(response => res.json(response.data))
+							.catch(error => res.json(error));
+
+					})
+					.post((req, res) => {
+
+						usersController
+							.create(req.body)
+							.then(response => {
+								res.status(response.statusCode);
+								res.json(response.data);
+							})
+							.catch(error => {
+								console.log(error);
+								res.json(error);
+							});
+					});
+
+				app.route('/users/:id')
+					.get((req, res) => {
+			
+						usersController
+							.getById(req.params)
+							.then((response) => {
+								res.status(response.statusCode);
+								res.json(response.data);
+							})
+							.catch(error => res.json(error));
+					})
+					.put((req, res) => {
+
+						usersController
+						.update(req.body, req.params)
+						.then((response) => {
+							res.status(response.statusCode);
+							res.json(response.data);
+						})
+						.catch(error => res.json(error));
+					})
+					.delete((req, res) => {
+
+						usersController
+							.delete(req.params)
+							.then(response => {
+								res.status(response.statusCode);
+								res.json(response);
+							})
+							.catch(error => res.json(error));
+					});
+			};
+
+*\
+
+No arquivo 'app.js'.
+
+	Código:
+
+*/
+
+		var express = require('express');
+		var bodyParser = require('body-parser')
+		var config = require('./config/config');
+		var datasource = require('./config/datasource');
+		var usersRouter = require('./routes/users'); 
+
+		const app = express();
+		app.config = config;
+		app.datasource = datasource(app);
+
+		app.set('port', 3000);
+		app.use(bodyParser.json());
+
+		usersRouter(app);
+
+		app.get('/', (req, res) => {
+			res.send("My Api! :)");
+		});
+
+		app.listen( app.get('port'), () => {
+			console.log(`Api listening on port ${ app.get('port') }`);
+		});
+
+*\
+
+AUTENTICAÇÃO.
+
+No diretório [config].
+
+	Adicione mais alguns parâmetros ao arquivo 'config.js':
+
+*/
+
+		module.exports = {
+			database: 'dbtest',
+			username: 'postgres',
+			password: '@root',
+			host: '127.0.0.1',
+			params: {
+				dialect: 'postgres'
+			},
+			jwtSecret: 'T0P-S3CR3T',
+			jwtSession: { session: false },
+		};		
+
+*\
+
+No diretório raiz.
+
+	Crie o arquivo 'auth.js'.
+
+		Configure o JWT e o PASSPORT para autenticação:
+
+*/
+
+			const passport = require('passport');
+			const Strategy = require('passport-jwt').Strategy;
+			const ExtractJwt = require('passport-jwt').ExtractJwt;
+
+			module.exports = (app) => {
+
+				const Users = app.datasource.models.users;
+
+				const options = {};
+
+				options.secretOrKey = app.config.jwtSecret;
+				options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+
+				const strategy = new Strategy(options, (payload, done) => {
+
+					Users.findOne({ where: payload.id })
+						.then(user => {
+							
+							if(user) {
+								return done(null, {
+									id: user.id,
+									email: user.email
+								});
+							}
+
+							return done(null, false);
+
+						})
+						.catch(error => done(error, null));
+				});
+
+				passport.use(strategy);
+
+				return {
+					initialize: () => passport.initialize(),
+					authenticate:  () => passport.authenticate('jwt', app.config.jwtSession)
+				};
+			};
+
+*\
+
+
+No diretório [routes].
+
+	Crie o arquivo 'auth.js'.
+
+		Escreva a rota de autenticação:
+
+*/
+
+			const HttpStatus = require("http-status");
+			const jwt = require("jwt-simple");
+
+			module.exports = (app) => {
+
+				const config = app.config;
+
+				const Users = app.datasource.models.users;
+
+				app.route('/token')
+					.post((req, res) => {
+
+						if(req.body.email && req.body.password) {
+
+							const email = req.body.email;
+							const password = req.body.password;
+
+							// Busca usuário pelo email
+							Users
+								.findOne({ where: { email } })
+								.then(data => {
+									
+									const user = data.dataValues;
+					
+									// verificando as senhas                         
+									if(Users.verifyPassword(user.password, password)) {
+										
+										const payload = { id: user.id };
+
+										res.json({
+											token: jwt.encode(payload, config.jwtSecret)
+										});
+
+									} else {
+										// se as senhas foram diferentes
+										res.sendStatus(HttpStatus.UNAUTHORIZED);
+									}
+								})
+								.catch(error => {
+									console.log(error);
+									res.sendStatus(HttpStatus.UNAUTHORIZED);
+								});
+						} else {
+							res.sendStatus(HttpStatus.UNAUTHORIZED);
+						}
+					});
+			};
+
+*\
+
+
+AUTENTICAÇÃO NAS ROTAS.
+
+No arquivo 'app.js':
+
+	Escreva o código:
+
+*/
+
+		var express = require('express');
+		var bodyParser = require('body-parser')
+		var config = require('./config/config');
+		var datasource = require('./config/datasource');
+		var usersRouter = require('./routes/users'); 
+		var authRouter = require('./routes/auth');
+		var authorization = require('./auth');
+
+		const app = express();
+		app.config = config;
+		app.datasource = datasource(app);
+
+		app.set('port', 3000);
+
+		const auth = authorization(app);
+
+		app.use(bodyParser.json());
+
+		app.use(auth.initialize());
+
+		app.auth = auth;
+
+		usersRouter(app);
+		authRouter(app);
+
+		app.get('/', (req, res) => {
+			res.send("My Api! :)");
+		});
+
+		app.listen( app.get('port'), () => {
+			console.log(`Api listening on port ${ app.get('port') }`);
+		});
+
+*\
+
+No arquivo [routes/users.js].
+
+	Adicione a autenticação nas rotas:
+
+*/
+
+		var UsersController = require('../controllers/users');
+
+		module.exports = (app) => {
+
+			const usersController = new UsersController(app.datasource.models.users);
+
+			app.route('/users')
+				.all(app.auth.authenticate())
+				.get((req, res) => {
+
+					usersController
+						.getAll()
+						.then(response => res.json(response.data))
+						.catch(error => res.json(error));
+
+				})
+				.post((req, res) => {
+
+					usersController
+						.create(req.body)
+						.then(response => {
+							res.status(response.statusCode);
+							res.json(response.data);
+						})
+						.catch(error => {
+							console.log(error);
+							res.json(error);
+						});
+				});
+
+			app.route('/users/:id')
+				.all(app.auth.authenticate())
+				.get((req, res) => {
+		
+					usersController
+						.getById(req.params)
+						.then((response) => {
+							res.status(response.statusCode);
+							res.json(response.data);
+						})
+						.catch(error => res.json(error));
+				})
+				.put((req, res) => {
+
+					usersController
+					.update(req.body, req.params)
+					.then((response) => {
+						res.status(response.statusCode);
+						res.json(response.data);
+					})
+					.catch(error => res.json(error));
+				})
+				.delete((req, res) => {
+
+					usersController
+						.delete(req.params)
+						.then(response => {
+							res.status(response.statusCode);
+							res.json(response);
+						})
+						.catch(error => res.json(error));
+				});
+		};
+
+*\
+
+Api Autenticada!
+
+Observações.
+
+É necessário ter um usuário cadastrado no banco.
+Ao enviar um post para a rota '/token'
+com email e password ocorrerá uma validação,
+e em caso de sucesso um token será enviado.
+Para testar, foi utilizado o POSTMAN.
+Com o Token em mãos,
+clique na opção 'Authorization' do POSTMAN.
+Em 'Type' selecione a opção 'Bearer Token'.
+Copie o token no campo 'Token' e 
+tente realizar a requisição.
+
+END/

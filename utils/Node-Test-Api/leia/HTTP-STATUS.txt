@@ -1,0 +1,27 @@
+$ npm install --save http-status
+
+HTTP REQUESTS RESTFul Defaults
+
+    [GET]
+        - All
+            success: 200
+            failed:  400
+
+        -One
+            success: 200
+            failed:  400
+            
+    [POST]
+        - Create
+            success: 201
+            failed:  422
+
+    [PUT]
+        - Update
+            success: 200
+            failed:  422     
+
+    [DELETE]
+        - Delete
+            success: 200
+            failed:  204      

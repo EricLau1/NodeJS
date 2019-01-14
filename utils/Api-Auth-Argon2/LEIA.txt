@@ -1,0 +1,64 @@
+Criando uma Api RestFul com NodeJs
+
+Módulos.
+
+npm i express body-parser --save
+
+npm i sequelize pg pg-hstore --save
+
+npm i http-status --save
+
+npm i argon2 --save
+
+npm i nodemailer --save
+
+npm i jsonwebtoken passport passport-jwt --save
+
+npm i cors
+
+
+Referências.
+
+
+Express:
+
+	https://expressjs.com/pt-br/4x/api.html
+
+
+BodyParser:
+
+	https://www.npmjs.com/package/body-parser
+
+
+
+Sequelize/Postgres:
+
+	http://docs.sequelizejs.com/manual/installation/getting-started.html
+
+
+
+Http-Status:
+
+	https://www.npmjs.com/package/http-status
+
+
+
+Argon2:
+
+	https://www.npmjs.com/package/argon2
+
+
+
+JsonWebToken:
+
+	https://jwt.io/
+
+
+Passport:
+
+	http://www.passportjs.org/
+
+
+Cors:
+
+	https://www.npmjs.com/package/cors

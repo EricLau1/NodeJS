@@ -1,0 +1,257 @@
+$ npm install --save jwt-simple passport passport-jwt
+
+No arquivo [config/config.js].
+
+    Atualize com as configurações para o JWT:
+
+        export default {
+        database: process.env.NODE_ENV ? 'test_dbooks' : 'dbooks',
+        username: '',
+        password: '',
+        params: {
+            dialect: 'sqlite',
+            storage: process.env.NODE_ENV ? 'test_dbooks.sqlite' : 'dbooks.sqlite',
+            define: {
+                underscored: true,
+            },
+        },
+            jwtSecret: 'S3CR3T',
+            jwtSession: { session: false }
+        };
+
+
+No diretório raiz.
+
+    Crie um arquivo 'auth.js'.
+
+        Escreva as configurações do JWT e PASSPORT para autenticação:
+
+            import passport from 'passport';
+            import { Strategy, ExtractJwt } from 'passport-jwt';
+
+            export default (app) => {
+
+                const User = app.datasource.models.Users;
+
+                const options = {};
+
+                // definições para passport-jwt
+                options.secretOrKey = app.config.jwtSecret;
+                // extrai o token o Header da Request
+                options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+
+                const strategy = new Strategy(options, (payload, done ) => {
+
+                    // busca um usuário no banco pelo Id
+                    User.findOne( {where: { id: payload.id } } )
+                        .then(user => {
+                            
+                            // se o usuário for encotrado
+                            if(user) {
+                                // retorna o Id e o Email
+                                return done(null, {
+                                    id: user.id,
+                                    email: user.email
+                                });
+
+                            }
+
+                            //senão
+                            return done(null, false);
+
+                        })
+                        .catch(error => done(error, null));
+
+                });
+
+                passport.use(strategy);
+
+                return  {
+                    initialize: () => passport.initialize(),
+                    authenticate: () => passport.authenticate('jwt', app.config.jwtSecret),
+                }
+
+            }
+
+No arquivo 'app.js'.
+
+    Atualize o código:
+
+        import express from 'express';
+        import bodyParser from 'body-parser';
+        import config from './config/config';
+        import datasource from './config/datasource';
+        import booksRouter from './routes/book';
+        import usersRouter from './routes/user';
+        import authorization from './auth';
+
+        const app = express();
+        app.config = config;
+        app.datasource = datasource(app);
+        app.set('port', 7000);
+        app.use(bodyParser.json());
+
+        const auth = authorization(app);
+        // agora o express irá usar o midleware de autenticação
+        app.use(auth.initialize());
+        app.auth = auth;
+
+        booksRouter(app);
+        usersRouter(app);
+
+        export default app;
+
+Rode o teste:
+
+$ npm run test-integration
+
+No diretório [routes/].
+
+    Crie um arquivo 'auth.js' que será a rota de autenticação.
+
+        Escreva o código:
+
+            import HttpStatus from 'http-status';
+            import jwt from 'jwt-simple';
+
+            export default (app) => {
+
+                const config = app.config;
+
+                const User = app.datasource.models.Users;
+
+                app.post('/token', (req, res) => {
+
+                    // verifica se no corpo da requisição existe um email e um password
+                    if ( req.body.email && req.body.password ) {
+
+                        const email = req.body.email;
+                        const password = req.body.password;
+
+                        User
+                            .findOne({where: { email: email } })
+                            .then(user => {
+                                
+                                // Se o usuário for encontrado
+                                // Compara o Hash da password do banco com a senha enviada na requisição
+                                if (Users.isPassword( user.password, password )) {
+
+                                    const payload = {id: user.id};
+
+                                    // return o toke de autenticação criptografado.
+                                    res.json({
+                                        token: jwt.encode(payload, config.jwtSecret)
+                                    });
+
+                                } else {
+
+                                    // senão
+                                    // usuário não está autorizado
+                                    res.sendStatus(HttpStatus.UNAUTHORIZED); // 401
+
+                                } 
+                            })
+                            .catch(() => res.sendStatus(HttpStatus.UNAUTHORIZED));
+
+                    } else {
+                        
+                        res.sendStatus(HttpStatus.UNAUTHORIZED); // 401
+
+                    }
+
+                });
+
+            }
+
+
+No arquivo 'app.js'.
+
+    Atualize o código:
+
+        import express from 'express';
+        import bodyParser from 'body-parser';
+        import config from './config/config';
+        import datasource from './config/datasource';
+        import booksRouter from './routes/book';
+        import usersRouter from './routes/user';
+        import authRouter from './routes/auth';
+        import authorization from './auth';
+
+        const app = express();
+        app.config = config;
+        app.datasource = datasource(app);
+        app.set('port', 7000);
+        app.use(bodyParser.json());
+
+        const auth = authorization(app);
+        // agora o express irá usar o midleware de autenticação
+        app.use(auth.initialize());
+        app.auth = auth;
+
+        booksRouter(app);
+        usersRouter(app);
+        authRouter(app);
+
+
+        export default app;
+
+No arquivo [models/User.js].
+
+    Escreva o código:
+
+        import bcrypt from 'bcrypt';
+
+        export default (sequelize, DataType) => {
+
+            const User = sequelize.define('Users', {
+                id:{
+                    type: DataType.INTEGER,
+                    primaryKey: true,
+                    autoIcrement: true
+                },
+                name:{
+                    type: DataType.STRING,
+                    allowNull: false,
+                    validate: {
+                        notEmpty: true
+                    }
+                },
+                email:{
+                    type: DataType.STRING,
+                    allowNull: false,
+                    validate: {
+                        notEmpty: true
+                    }
+                },
+                password:{
+                    type: DataType.STRING,
+                    allowNull: false,
+                    validate: {
+                        notEmpty: true
+                    }
+                }
+            },
+            {   // Estas açõe serão executadas antes de realizar uma 
+                // determinada operação na tabela.
+                hooks: {
+                    // A senha será encriptada antes de realizar o insert
+                    beforeCreate: function (user) {
+                        const salt = bcrypt.genSaltSync();
+                        user.set('password', bcrypt.hashSync(user.password, salt));
+                    }
+                }
+            });
+
+            // método pertecente a esté model
+            User.isPassword = function (encodedPassword, password)  {
+
+                return bcrypt.compareSync(password, encodedPassword);
+
+            }
+
+            return User;
+        }
+
+Agora é necessário autenticar as rotas.
+
+No arquivo [routes/book.js].

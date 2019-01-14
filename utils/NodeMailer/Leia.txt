@@ -1,0 +1,24 @@
+Enviando Email com Gmail
+
+Referência.
+
+https://www.w3schools.com/nodejs/nodejs_email.asp
+
+Comandos utilizados:
+
+$ mkdir Node-Email
+
+$ cd Node-Email
+
+$ npm init -y
+
+$ npm install nodemailer
+
+$ npm install
+
+$ node app.js
+
+
+É necessário ativar a opção no gmail "app menos seguro".
+
+https://myaccount.google.com/lesssecureapps?utm_source=google-account&utm_medium=web

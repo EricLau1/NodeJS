@@ -1,0 +1,15 @@
+<div>
+  <h1> Angular Test </h1>
+  <h2>Users</h2>
+  <table>
+    <th>Id</th>
+    <th>Name</th>
+    <th>Password</th>
+    <tr *ngFor="let user of users">
+      <td> {{ user.id }}</td>
+      <td> {{ user.name }} </td>
+      <td> {{ user.password }} </td>
+    </tr>
+  </table>
+</div>
+

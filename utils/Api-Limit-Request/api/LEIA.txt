@@ -1,0 +1,7 @@
+Instalação.
+
+npm install express body-parser cors --save
+
+Execute:
+
+npm start

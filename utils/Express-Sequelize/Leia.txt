@@ -1,0 +1,198 @@
+Nodejs com Express e Sequelize
+
+Instalação Express Generator
+
+$ npm install express-generator -g
+
+Comando para gerar o projeto no padrão MVC
+
+$ express [nome-do-projeto]
+
+    Exemplo:
+
+        express myApp
+
+Entre no diretório do projeto.
+
+$ cd myApp
+
+Instale as dependências.
+
+$ npm install
+
+
+Instalação do Sequelize.
+
+$ npm install sequelize sequelize-cli pg pg-hstore --save
+
+Os pacotes 'pg' e o 'pg-hstore' são para o postgres.
+
+
+No arquivo 'app.js' modifique a linha:
+
+    app.use(express.urlencoded({ extended: false }));
+
+    para:
+
+        app.use(express.urlencoded({ extended: true }));
+
+
+Execute o comando:
+
+$ ./node_modules/.bin/sequelize init
+
+
+Dentro do diretório [bin]:
+
+    No arquivo 'www' adicione a linha:
+
+        var models = require('../models'); 
+
+        Também adicione a linha:
+
+            models.sequelize.sync().then({
+
+            });
+
+            Antes da linha:
+
+                server.listen(port);
+
+            Para fazer a sincronização dos modelos com o banco de dados.
+
+        Será necessário recortar o bloco de código:
+
+            server.listen(port);
+            server.on('error', onError);
+            server.on('listening', onListening);
+
+            para:
+
+                models.sequelize.sync().then( function() {
+                    server.listen(port);
+                    server.on('error', onError);
+                    server.on('listening', onListening);
+                });
+
+            Para que o servidor só inicie após a sincronização dos models.
+
+Criando um banco de dados no Postgres (TERMINAL LINUX DEEPIN):
+
+$ sudo -u postgres createdb test
+
+Conectando ao banco Criando:
+
+$ sudo -u postgres psql test
+
+
+Criando um banco de dados no Postgres (TERMINAL WINDOWS):
+
+    Login:
+
+        \> psql -U postgres
+
+    Criando o banco:
+
+        create database test;   
+
+
+No do diretório [config]:
+
+    no arquivo 'config.json':
+
+         * Este arquivo vem configurado por padrão para o MySQL *
+
+        Mudanças no arquivo para configurar o postgres:
+
+                "development": {
+                    "username": "postgres",      // NOME DO USUÁRIO
+                    "password": "@root",         // SENHA DO USUÁRIO
+                    "database": "test",          // NOME DO BANCO
+                    "host": "127.0.0.1",
+                    "dialect": "postgres"        // TIPO DO BANCO
+                }
+
+
+No diretório [models]:
+
+    Crie um arquivo 'user.js'.
+
+        Conteúdo do arquivo:
+
+            module.exports = function (Sequelize, DataTypes) {
+
+                var user = Sequelize.define('user', {
+                    'name' : DataTypes.STRING
+                });
+
+                return user
+
+            }
+
+No diretório [routes]:
+
+    Crie um arquivo 'user.js':
+
+        Conteúdo do Arquivo:
+
+            var express = require('express');
+            var router = express.Router();
+
+            // importando modelos do Postgres
+            var models = require('../models');
+
+            /* GET users listing. */
+            router.get('/', function(req, res, next) {
+
+            // retornando todos os usuários salvos no postgres
+            models.user.findAll()
+                .then(function (users) {
+
+                //renderiza a view do mesmo nome passado como parâmetro.
+                res.render('users', { title: 'Users', users: users });
+            
+                });
+
+            });
+
+            router.post('/', function(req, res){
+            
+            var user = req.body.user;
+
+            // faz o insert do usuário no postgres
+            models.user.create(user).then(() => {
+                // fazer um redirect pra users
+                res.redirect('users');
+            });
+
+            }); 
+
+            module.exports = router;
+
+No diretório [views]:
+
+    Crie um arquivo 'users.jade':
+
+        Conteúdo do arquivo:
+
+            extends layout
+            block content
+                // h1 recebe o valor da variável title declarada dentro de routes/users.js
+                h1= title
+
+                // percorrendo um array de objetos
+                each u in users
+                    li= u.name
+
+                h1= 'Cadastrar Usuário'
+
+                // Criando o formulário
+                form(action='/users', method='post')
+                    input(type='text', name='user[name]', autofocus)
+                    button(type='submit') Enviar
+
+
+
+
+
+

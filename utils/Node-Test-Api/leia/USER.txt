@@ -1,0 +1,365 @@
+$ npm install bcrypt --save
+
+no diretório [models]
+
+    Crie um arquivo 'User.js'.
+
+        Escreva no arquivo:
+
+
+            import bcrypt from 'bcrypt';
+
+            export default (sequelize, DataType) => {
+
+                const User = sequelize.define('Users', {
+                    id:{
+                        type: DataType.INTEGER,
+                        primaryKey: true,
+                        autoIcrement: true
+                    },
+                    name:{
+                        type: DataType.STRING,
+                        allowNull: false,
+                        validate: {
+                            notEmpty: true
+                        }
+                    },
+                    email:{
+                        type: DataType.STRING,
+                        allowNull: false,
+                        validate: {
+                            notEmpty: true
+                        }
+                    },
+                    password:{
+                        type: DataType.STRING,
+                        allowNull: false,
+                        validate: {
+                            notEmpty: true
+                        }
+                    }
+                },
+                {   // Estas açõe serão executadas antes de realizar uma 
+                    // determinada operação na tabela.
+                    hooks: {
+                        // A senha será encriptada antes de realizar o insert
+                        beforeCreate: function (user) {
+                            const salt = bcrypt.genSaltSync();
+                            user.set('password', bcrypt.hashSync(user.password, salt));
+                        }
+                    },
+                    // Definindo métodos para este modelo
+                    classMethods: {
+                        // isPassword é uma função que compara o hash da senha
+                        // salva no banco com o sanha enviada pelo login
+                        isPassword: function (encodedPassword, password) {
+
+                            bcrypt.compareSync(password, encodedPassword);
+
+                        }
+                    }
+                });
+
+                return User;
+            }
+
+
+No diretório [test/integration/routes/].
+
+    Crie um arquivo 'users.js'.
+
+        Escreva o código de teste:
+
+            describe('Rotas para Usuários', () => {
+                const User = app.datasource.models.Users;
+            
+                const defaultUser = {
+                    id: 1,
+                    name: 'default name',
+                    email: 'default@email.com',
+                    password: 'default123',
+                };
+            
+                // antes de cada um dos Testes
+                beforeEach((done) => {
+                    // se não existir nada no banco, a tabela é limpada
+                    User
+                        .destroy({ where: {} })
+                        .then(() => User.create(defaultUser)) // cria um user default
+                        .then(() => {
+                        done();
+                        });
+                });
+            
+                // Rota GET /users
+                describe('Rota GET /users', () => {
+                    it('retorna uma lista de usuários', (done) => {
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .get('/users')
+                            .end((err, res) => {
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // irá verificar se a propriedade enviada e igual ao objeto definido
+                                expect(res.body[0].id).to.be.eql(defaultUser.id);
+                                expect(res.body[0].name).to.be.eql(defaultUser.name);
+                                expect(res.body[0].email).to.be.eql(defaultUser.email);
+                    
+                                done(err);
+                            });
+                    });
+                });
+                // End Rota
+            
+                // Rota GET /users/{id}
+                describe('Rota GET /users/{id}', () => {
+                    it('retorna um usuário pelo id', (done) => {
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .get('/users/1')
+                            .end((err, res) => {
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // irá verificar se a propriedade enviada e igual ao objeto definido
+                                expect(res.body.id).to.be.eql(defaultUser.id);
+                                expect(res.body.name).to.be.eql(defaultUser.name);
+                                expect(res.body.email).to.be.eql(defaultUser.email);
+
+                                done(err);
+                            });
+                    });
+                });
+                // End Rota
+            
+                // Rota POST /users
+                describe('Rota POST /users', () => {
+                    it('Cria um novo usuário', (done) => {
+
+                        const newUser = {
+                            id: 2,
+                            name: 'new user',
+                            email: 'new@email.com',
+                            password: 'password123',
+                        };
+                
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .post('/users')
+                            .send(newUser)
+                            .end((err, res) => {
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // irá verificar se a propriedade enviada e igual ao objeto definido
+                                expect(res.body.id).to.be.eql(newUser.id);
+                                expect(res.body.name).to.be.eql(newUser.name);
+                                expect(res.body.email).to.be.eql(newUser.email);
+
+                                done(err);
+                            });
+                    });
+                });
+                // End Rota
+            
+                // Rota PUT /users
+                describe('Rota PUT /users/{id}', () => {
+                    it('Atualiza um usuário', (done) => {
+                        
+                        const user = {
+                            id: 1,
+                            name: 'updated user',
+                            email: 'updated@email.com',
+                            password: 'updated123',
+                        };
+                
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .put('/users/1')
+                            .send(user)
+                            .end((err, res) => {
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // No Update retorna o numero de updates realizados com sucesso
+                                expect(res.body).to.be.eql([1]);
+                    
+                                done(err);
+                            });
+                    });
+                });
+                // End Rota
+            
+                // Rota DELETE /users/:id
+                describe('Rota DELETE /users/{id}', () => {
+                    it('Deleta um usuário', (done) => {
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .delete('/users/1')
+                            .end((err, res) => {
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // No Delete é esperado o status da requisição
+                                expect(res.statusCode).to.be.eql(204);
+                                // 204 é o status para 'No Content'
+                    
+                                done(err);
+                            });
+                    });
+                });
+                // End Rota
+            });
+  
+            
+
+No diretório [routes/].
+
+    Crie um arquivo 'user.js'.
+
+        Escreva o código:
+
+            import UserController from '../controllers/user';
+
+            export default (app) => {
+            const userController = new UserController(app.datasource.models.Users);
+
+            app.route('/users')
+                .get((req, res) => {
+                    userController.getAll()
+                        .then((response) => {
+                            res.status(response.statusCode);
+                            res.json(response.data);
+                        });
+                }) // aproveitando a mesma rota para enviar POST
+                .post((req, res) => {
+                    userController.create(req.body)
+                        .then((response) => {
+                            res.status(response.statusCode);
+                            res.json(response.data);
+                        })
+                        .catch(() => res.status(412));
+                });
+
+
+            app.route('/users/:id')
+                .get((req, res) => {
+                    userController.getById(req.params)
+                        .then((response) => {
+                            res.status(response.statusCode);
+                            res.json(response.data);
+                        });
+                })
+                .put((req, res) => {
+                    userController.update(req.body, req.params)
+                        .then((response) => {
+                            res.status(response.statusCode);
+                            res.json(response.data);
+                        })
+                        .catch(() => res.status(412));
+                })
+                .delete((req, res) => {
+                    userController.delete(req.params)
+                            .then((response) => {
+                            res.sendStatus(response.statusCode);
+                        });
+                });
+            };
+
+
+
+
+No diretório [controllers/].
+
+    Crie um arquivo 'user.js'.
+
+        Escreva o código:
+
+              import HttpStatus from 'http-status';
+
+            const defaultResponse = (data, statusCode = HttpStatus.OK) => ({
+                data,
+                statusCode,
+            });
+
+            const errorResponse = (message, statusCode = HttpStatus.BAD_REQUEST) => defaultResponse({
+                error: message,
+            }, statusCode);
+
+
+            class UserController {
+
+                constructor(user) {
+
+                    this.User = user;
+
+                }
+
+                getAll() {
+                    return this.User.findAll({})
+                    .then(result => defaultResponse(result))
+                    .catch(error => errorResponse(error.message));
+                }
+
+                getById(params) {
+                    return this.User.findOne({ where: params })
+                    .then(result => defaultResponse(result))
+                    .catch(error => errorResponse(error.message));
+                }
+
+                create(data) {
+                    return this.User.create(data)
+                    .then(result => defaultResponse(result, HttpStatus.CREATED))
+                    .catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+                }
+
+                update(data, params) {
+                    return this.User.update(data, { where: params })
+                    .then(result => defaultResponse(result))
+                    .catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+                }
+
+                delete(params) {
+                    return this.User.destroy({ where: params })
+                    .then(result => defaultResponse(result, HttpStatus.NO_CONTENT))
+                    .catch(error => errorResponse(error.message, HttpStatus.UNPROCESSABLE_ENTITY));
+                }
+            }
+
+            export default UserController;
+
+
+No diretório arquivo 'app.js'.
+
+    Atualize o código:
+
+        import express from 'express';
+        import bodyParser from 'body-parser';
+        import config from './config/config';
+        import datasource from './config/datasource';
+        import booksRouter from './routes/book';
+        import usersRouter from './routes/user';
+
+        const app = express();
+        app.config = config;
+        app.datasource = datasource(app);
+        app.set('port', 7000);
+        app.use(bodyParser.json());
+
+        booksRouter(app);
+        usersRouter(app);
+
+        export default app;
+
+No arquivo 'package.json':
+
+     SCRIPTS:
+
+        "scripts": {
+            "start": "babel-node index.js",
+            "test": "npm run lint && npm run test-unit && npm run test-integration && npm run test-contract",
+            "test-integration": "NODE_ENV=test mocha --opts test/integration/mocha.opts test/integration/**/*.js",
+            "test-unit": "NODE_ENV=test mocha --opts test/unit/mocha.opts test/unit/**/*.js",
+            "test-contract": "NODE_ENV=test mocha --opts test/contracts/mocha.opts test/contracts/contracts/*.js",
+            "lint": "eslint '**/*.js'",
+            "lint:fix": "eslint '**/*.js' --fix"
+        }
+
+
+Rode o teste:
+
+$ npm run test-integration
+
+
+

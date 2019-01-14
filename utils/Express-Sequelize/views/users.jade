@@ -1,0 +1,15 @@
+extends layout
+block content
+    // h1 recebe o valor da variável title declarada dentro de routes/users.js
+    h1= title
+
+    // percorrendo um array de objetos
+    each u in users
+        li= u.name
+
+    h1= 'Cadastrar Usuário'
+
+     // Criando o formulário
+    form(action='/users', method='post')
+        input(type='text', name='user[name]', autofocus)
+        button(type='submit') Enviar

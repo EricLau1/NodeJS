@@ -1,0 +1,678 @@
+Api NodeJs
+
+$ npm init -y
+
+$ npm install babel babel-cli babel-preset-es2015 --save
+
+Crie um arquivo como nome '.babelrc'.
+
+    Escreva o código:
+
+        {
+            "presets": ["es2015"]
+        }
+
+
+$ npm install express --save
+
+Crie um arquivo com o nome 'app.js'.
+
+    Escreva o código:
+
+        import express from 'express';
+
+        const app = express();
+
+        export default app;
+
+
+Crie um arquivo com o nome 'index.js'.
+
+    Escreva o código:
+
+        import app from './app';
+
+        app.listen(7000, () => {
+            console.log('api rodando na porta 7000')
+        });
+
+
+Configure um "start" no 'package.json':
+
+        {
+            "name": "Api-Node",
+            "version": "1.0.0",
+            "description": "",
+            "main": "index.js",
+            "scripts": {
+                "start": "babel-node index.js",
+                "test": "echo \"Error: no test specified\" && exit 1"
+            },
+            "keywords": [],
+            "author": "",
+            "license": "ISC",
+            "dependencies": {
+                "babel": "^6.23.0",
+                "babel-cli": "^6.26.0",
+                "babel-preset-es2015": "^6.24.1",
+                "express": "^4.16.4"
+            }
+        }
+
+
+Intalação dos módulos de teste.
+
+$ npm install mocha chai supertest --save-dev
+
+Crie um diretório [test].
+
+    Crie um diretório [integration] dentro de [test].
+
+No diretório [test/integration]:
+
+    Crie um arquivo 'mocha.opts'.
+
+        Escreva o código:
+
+            --require test/integration/helpers.js
+            --reporter spec
+            --compilers js:babel-core/register
+            --slow 5000
+
+    Crie um arquivo 'helpers.js'.
+
+        Escreva o código:
+
+            import supertest from 'supertest';
+            import chai from 'chai';
+
+            import app from '../../app';
+
+            global.app = app;
+            global.request = supertest(app);
+            global.expect = chai.expect;
+
+No arquivo 'package.json':
+
+    Escreva o "script":
+
+            "scripts": {
+                "start": "babel-node index.js",
+                "test": "echo \"Error: no test specified\" && exit 1",
+                "test-integration": "mocha --opts test/integration/mocha.opts test/integration/*.js"
+            }
+
+Rode o Teste:
+
+$ npm run test-integration
+
+No diretório [test/integration]:
+
+    Crie um arquivo 'app.js'.
+
+        Escreva o código:
+
+            describe('Rotas para Livros', () => {
+
+                const defaultBook = {
+                    id: 1,
+                    title: 'default book'
+                };
+                
+                describe("Rota GET /books", () => {
+                    it("retorna uma lista de livros", done => {
+                        
+                        // {request} é uma variável global definida no 'helpers.js'
+                        request
+                            .get('/books')
+                            .end((err, res) => {
+
+                                // {expect} é uma variável global definida no 'helpers.js'
+                                // irá verificar se a propriedade enviada e igual ao objeto definido
+                                expect( res.body[0].id ).to.be.eql( defaultBook.id );
+                                expect( res.body[0].title ).to.be.eql( defaultBook.title );
+
+                                done(err);
+                            });
+                    });
+                });
+            });
+
+        
+Rode o Test:
+
+$ npm run test-integration
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Escreva o código:
+
+
+            import express from 'express';
+
+            const app = express();
+
+            app.route('/books').get((req, res) => {
+                res.json([
+                    {
+                        id: 1,
+                        title: 'default book'
+                    }
+                ]);
+            });
+
+            export default app;
+
+
+Rode o Test:
+
+$ npm run test-integration
+
+
+Intalação dos módulos de banco de dados e orm:
+
+$ npm install sequelize sqlite3 --save
+
+No diretório raiz.
+
+    Crie um diretório com o nome [config].
+
+        Crie um arquivo 'config.js' para configurações globais.
+
+            Escreva o código:
+
+            export default {
+                database: 'dbooks', // configuraço do sqlite
+                username: '',       // configuraço do sqlite
+                password: '',       // configuraço do sqlite
+                params: {           // configuraço do sequelize
+                    dialect: 'sqlite',        // tipo do banco
+                    storage: 'dbooks.sqlite', // nome do arquivo onde os dados serão salvos
+                    define: {
+                        underscored: true
+                    }
+                }
+            }
+
+        Crie um arquivo 'datasource.js'.
+
+            Escreva o código:
+
+                import Sequelize from 'sequelize';
+                import fs from 'fs';
+                import path from 'path';
+
+                let database = null;
+
+                const loadModels = (sequelize) => {
+
+                    const dir = path.join(__dirname, '../models');
+                    let models = [];
+
+                    fs.readdirSync(dir).forEach( file => {
+                        
+                        const modelDir = path.join(dir, file);
+                        const model = sequelize.import(modelDir);
+                        models[model.name] = model;
+                    });
+
+                    return models;
+
+                };
+
+                export default (app) => {
+
+                    if(!database) {
+
+                        const config = app.config; 
+
+                        const sequelize = new Sequelize(
+                            config.database,
+                            config.username,
+                            config.password,
+                            config.params  
+                            );
+                        
+                        database = {
+                            sequelize,
+                            Sequelize,
+                            models: {}
+                        };
+
+                        database.models = loadModels(sequelize);
+
+                        sequelize.sync().done(() => database ); 
+                        
+                    }
+                    return database;
+                };
+
+
+No diretório raiz.
+
+    Crie um diretório [models].
+
+        Crie um arquivo 'Book.js'.
+
+            Escreva o código:
+
+                export default (sequelize, Datatype) => {
+
+                    // definindo um modelo no banco de dados
+                    const Book = sequelize.define('Books', {
+                        id: {
+                            type: Datatype.INTEGER,
+                            primaryKey: true,
+                            autoIncrement: true
+                        },
+                        title: {
+                            type: Datatype.STRING,
+                            allowNull: false,
+                            validate: {
+                                notEmpty: true
+                            }
+                        }
+                    });
+
+                    return Book;
+
+                }
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Atualize o código:
+        
+            import express from 'express';
+            import config from './config/config';
+            import datasource from './config/datasource';
+
+            const app = express();
+            app.config = config;
+            app.datasource = datasource(app);
+            app.set('port', 7000);
+
+            // o nome da tabela é criada com plural do nome do modelo
+            // por isso é retornado Books
+            
+            const Book = app.datasource.models.Books;
+
+            app.route('/books').get((req, res) => {
+
+                Book.findAll({})
+                    .then(result => res.json(result))
+                    .catch(err => res.status(412));
+
+            });
+
+            export default app;
+
+        
+    No arquivo 'index.js'.
+
+        Atualize o código:
+
+            import app from './app';
+
+            app.listen( app.get('port') , () => {
+                console.log(`api rodando na porta ${app.get('port')}`);
+            });
+
+
+No arquivo [test/integration/app.js].
+
+    Escreva atualize código:
+
+        describe('Rotas para Livros', () => {
+
+            const Book = app.datasource.models.Books;
+            
+            const defaultBook = {
+                id: 1,
+                title: 'default book'
+            };
+            
+            // antes de cada um dos Testes
+            beforeEach(done => {
+
+                // se não existir nada no banco 
+                Book
+                    .destroy( { where: {} } ) // a tabela é destruida
+                    .then(() => Book.create( defaultBook ) ) // cria uma nova com um livro default
+                    .then(() => {
+                        done();
+                    });
+            
+            });
+
+            describe("Rota GET /books", () => {
+                it("retorna uma lista de livros", done => {
+                    
+                    // {request} é uma variável global definida no 'helpers.js'
+                    request
+                        .get('/books')
+                        .end((err, res) => {
+
+                            // {expect} é uma variável global definida no 'helpers.js'
+                            // irá verificar se a propriedade enviada e igual ao objeto definido
+                            expect( res.body[0].id ).to.be.eql( defaultBook.id );
+                            expect( res.body[0].title ).to.be.eql( defaultBook.title );
+
+                            done(err);
+                        });
+                });
+            });
+        });
+
+        Adicione mais um teste neste arquivo:
+
+            // Rota GET /books/{id}
+            describe("Rota GET /books/{id}", () => {
+                it("retorna um livro pelo id", done => {
+                    
+                    // {request} é uma variável global definida no 'helpers.js'
+                    request
+                        .get('/books/1')
+                        .end((err, res) => {
+
+                            // {expect} é uma variável global definida no 'helpers.js'
+                            // irá verificar se a propriedade enviada e igual ao objeto definido
+                            expect( res.body.id ).to.be.eql( defaultBook.id );
+                            expect( res.body.title ).to.be.eql( defaultBook.title );
+
+                            done(err);
+                        });
+                });
+            });
+
+Execute o teste:
+
+$ npm run test-integration
+
+    1 Teste falha.
+
+Corrigindo o erro.
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Adicione mais uma rota:
+
+        app.route('/books/:id').get((req, res) => {
+
+            // procura um objeto com o id passado como parâmetro
+            Book.findOne( { where: req.params } )
+                .then(result => res.json(result))
+                .catch(err => res.status(412));
+
+        });
+
+
+Execute o teste:
+
+$ npm run test-integration
+
+No arquivo [test/integration/app.js].
+
+    Escreva mais um teste:
+
+        // Rota POST /books
+        describe("Rota POST /books", () => {
+            it("Cria um novo Livro", done => {
+
+                const book = {
+                    id: 2,
+                    title: 'new book'
+                };
+                
+                // {request} é uma variável global definida no 'helpers.js'
+                request
+                    .post( '/books' )
+                    .send( book )
+                    .end(( err, res ) => {
+
+                        // {expect} é uma variável global definida no 'helpers.js'
+                        // irá verificar se a propriedade enviada e igual ao objeto definido
+                        expect( res.body.id ).to.be.eql( book.id );
+                        expect( res.body.title ).to.be.eql( book.title );
+
+                        done(err);
+                    });
+            });
+        });
+        // End Rota
+
+
+Execute o teste:
+
+$ npm run test-integration
+
+    1 Teste falha.
+
+
+Instale o módulo:
+
+$ npm install body-parser --save
+
+
+Corrigindo erro.
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Adicione o POST a rota 'GET /books':
+
+            app.route('/books')
+                .get((req, res) => {
+
+                Book.findAll({})
+                    .then(result => res.json(result))
+                    .catch(err => res.status(412));
+
+                }) // aproveitando a mesma rota para enviar POST
+                .post((req, res) => {
+                    
+                    Book.create(req.body)
+                        .then(result => res.json(result) )
+                        .catch(err => res.status(412));
+
+                }); 
+            
+Execute o teste:
+
+$ npm run test-integration
+
+    3 Test Success!
+
+
+No arquivo [test/integration/app.js].
+
+    Escreva mais um teste:
+
+        // Rota PUT /books
+        describe("Rota PUT /books/{id}", () => {
+            it("Atualiza um Livro", done => {
+
+                const book = {
+                    id: 1,
+                    title: 'updated book'
+                };
+                
+                // {request} é uma variável global definida no 'helpers.js'
+                request
+                    .put( '/books/1' )
+                    .send( book )
+                    .end(( err, res ) => {
+
+                        // {expect} é uma variável global definida no 'helpers.js'
+                        // No Update retorna o numero de updates realizados com sucesso
+                        expect( res.body ).to.be.eql( [1] );
+
+                        done(err);
+                    });
+            });
+        });
+        // End Rota
+
+Execute o teste:
+
+$ npm run test-integration
+
+    1 Teste falha.
+
+Corrigindo erro.
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Adicione uma requisição 'put' a rota "/books/:id":
+
+
+            app.route('/books/:id')
+                .get((req, res) => {
+
+                    Book.findOne( { where: req.params } )
+                        .then(result => res.json(result))
+                        .catch(err => res.status(412));
+
+                })
+                .put((req, res) => {
+
+                    Book.update( req.body, { where: req.params } )
+                        .then(result => res.json(result))
+                        .catch(err => res.status(412));
+
+                });
+    
+
+Execute o teste:
+
+$ npm run test-integration
+
+    4 Test Success!
+
+
+No arquivo [test/integration/app.js].
+
+    Escreva mais um teste:
+
+        // Rota DELETE /books
+        describe("Rota DELETE /books/{id}", () => {
+            it("Deleta um Livro", done => {
+                
+                // {request} é uma variável global definida no 'helpers.js'
+                request
+                    .delete( '/books/1' )
+                    .end(( err, res ) => {
+
+                        // {expect} é uma variável global definida no 'helpers.js'
+                        // No Delete é esperado o status da requisição
+                        expect( res.statusCode ).to.be.eql( 204 );
+                        // 204 é o status para 'No Content'
+
+                        done(err);
+                    });
+            });
+        });
+        // End Rota
+
+
+No diretório raiz.
+
+    No arquivo 'app.js'.
+
+        Adicione uma requisição 'delete' a rota "/books/:id":
+
+        app.route('/books/:id')
+            .get((req, res) => {
+
+                Book.findOne( { where: req.params} )
+                    .then(result => res.json(result))
+                    .catch(err => res.status(412));
+
+            })
+            .put((req, res) => {
+
+                Book.update( req.body, { where: req.params} )
+                    .then(result => res.json(result))
+                    .catch(err => res.status(412));
+
+            })
+            .delete((req, res) => {
+
+                Book.destroy( { where: req.params} )
+                    .then(result => res.sendStatus(204))
+                    .catch(err => res.status(412));
+
+            });
+
+
+Execute o teste:
+
+$ npm run test-integration
+
+    5 Test Success!
+
+
+Instalação Eslint e Airbnb:
+
+$ (
+  export PKG=eslint-config-airbnb;
+  npm info "$PKG@latest" peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g' | xargs npm install --save-dev "$PKG@latest"
+)
+
+No diretório raiz.
+
+    Crie um arquivo '.eslintrc.json'.
+
+        Escreva o código:
+        
+            {
+                "extends" : "airbnb",
+                "rules": {
+                    "semi" : 2,
+                    "import/no-extraneous-dependencies": [
+                        "error", {
+                            "devDependencies": true
+                        }
+                    ]
+                },
+                "globals": {
+                    "describe": true,
+                    "it" : true,
+                    "expect" : true,
+                    "app" : true,
+                    "request": true,
+                    "beforeEach": true
+                }
+            }
+
+
+No 'package.json'.
+
+    Adicione mais dois "scripts":
+
+        "scripts": {
+            "start": "babel-node index.js",
+            "test": "echo \"Error: no test specified\" && exit 1",
+            "test-integration": "mocha --opts test/integration/mocha.opts test/integration/*.js",
+            "lint": "eslint '**/*.js'",
+            "lint:fix": "eslint '**/*.js' --fix"
+        }
+
+Comando para verificar o padrão do código:
+
+$ npm run lint
+
+Comando para corrigir erros de padrão do código:
+
+$ npm run lint:fix
+
+
+Continua no arquivo 'CONTROLLERS.txt'.
